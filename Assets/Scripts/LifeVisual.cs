@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class LifeVisual : MonoBehaviour
 {
-    const uint maxspeed = 25;
     public int h = 60;
     public int w = 30;
+    public bool interactive = true;
+
+    const uint maxspeed = 25;
 
     bool game = false;
     int speed = 1;
@@ -22,6 +24,7 @@ public class LifeVisual : MonoBehaviour
         life = new Life(h + 1, w + 1);
 
         GameObject sprite = Resources.Load("Cell") as GameObject;
+        sprite.GetComponent<Cell>().interactive = interactive;
 
         for (int i = -h / 2; i <= h / 2; i++)
         {
@@ -34,6 +37,13 @@ public class LifeVisual : MonoBehaviour
                 Sprite.GetComponent<Cell>().j = j + w / 2;
                 all[i + h / 2].Add(Sprite);
             }
+        }
+
+        if (!interactive)
+        {
+            CreateRandomField();
+            game = true;
+            speed = 2;
         }
     }
 

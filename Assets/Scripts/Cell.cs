@@ -5,15 +5,20 @@ using UnityEngine;
 public class Cell : MonoBehaviour
 {
     public int i, j;
+    public bool interactive = false;
     LifeVisual main;
     private void Start()
     {
-        main = GameObject.Find("Main Camera").GetComponent<LifeVisual>();
+        if (interactive)
+        {
+            Debug.Log("Find camera");
+            main = GameObject.Find("Main Camera").GetComponent<LifeVisual>();
+        }
     }
 
     private void OnMouseDown()
     {
-        main.ChangeCell(i, j);
-        //Debug.Log(i.ToString() + " " + j.ToString());
+        if (interactive)
+            main.ChangeCell(i, j);
     }
 }
