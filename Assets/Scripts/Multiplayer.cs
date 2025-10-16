@@ -46,12 +46,13 @@ public class CreateMultiplayer : MonoBehaviour
     }
     public void ApplyGameSettings()
     {
-        StepCount = int.Parse(StepCountInputField.GetComponent<TMP_InputField>().text);
-        GameSpeed = int.Parse(GameSpeedInputField.GetComponent<TMP_InputField>().text);
-
-        GameSettingsUI.SetActive(false);
-        FirstPlayerUI.SetActive(true);
-        GetComponent<LifeVisual>().enabled = true;
+        if (int.TryParse(StepCountInputField.GetComponent<TMP_InputField>().text, out StepCount) &&
+            int.TryParse(GameSpeedInputField.GetComponent<TMP_InputField>().text, out GameSpeed))
+        {
+            GameSettingsUI.SetActive(false);
+            FirstPlayerUI.SetActive(true);
+            GetComponent<LifeVisual>().enabled = true;
+        }
     }
 
     public void ApplyFirstPlayerField()

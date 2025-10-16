@@ -46,7 +46,7 @@ public class LifeVisual : MonoBehaviour
 
     void Start()
     {
-        life = new Life(h + 1, w + 1, multiplayer);
+        life = new Life(h, w, multiplayer);
 
         CreateCells();
         updateSprites();
@@ -65,16 +65,16 @@ public class LifeVisual : MonoBehaviour
         GameObject sprite = Resources.Load("Cell") as GameObject;
         sprite.GetComponent<Cell>().interactive = interactive;
 
-        for (int i = -h / 2; i <= h / 2; i++)
+        for (int i = 0; i < h; i++)
         {
             all.Add(new List<GameObject>());
-            for (int j = -w / 2; j <= w / 2; j++)
+            for (int j = 0; j < w; j++)
             {
                 GameObject Sprite = Instantiate(sprite);
-                Sprite.transform.position = new Vector2(j, i);
-                Sprite.GetComponent<Cell>().i = i + h / 2;
-                Sprite.GetComponent<Cell>().j = j + w / 2;
-                all[i + h / 2].Add(Sprite);
+                Sprite.transform.position = new Vector2(j - w/2, i - h/2);
+                Sprite.GetComponent<Cell>().i = i;
+                Sprite.GetComponent<Cell>().j = j;
+                all[i].Add(Sprite);
             }
         }
     }
@@ -96,7 +96,7 @@ public class LifeVisual : MonoBehaviour
 
     public void ClearField()
     {
-        life = new Life(h + 1, w + 1, multiplayer);
+        life = new Life(h, w, multiplayer);
         updateSprites();
     }
 
@@ -220,11 +220,8 @@ public class LifeVisual : MonoBehaviour
     }
     public void CreateRandomField()
     {
-        if (!game)
-        {
-            life.setRandomField();
-            updateSprites();
-        }
+        life.setRandomField();
+        updateSprites();
     }
     public void ChangeCell(int i, int j)
     {
