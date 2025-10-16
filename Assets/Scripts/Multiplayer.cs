@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static Life;
 
 public class CreateMultiplayer : MonoBehaviour
 {
-    List<List<bool>> firstPlayerField;
-    List<List<bool>> secondPlayerField;
+    List<List<CellState>> firstPlayerField;
+    List<List<CellState>> secondPlayerField;
 
     GameObject FirstPlayerUI;
     GameObject SecondPlayerUI;
@@ -46,13 +47,13 @@ public class CreateMultiplayer : MonoBehaviour
     }
 
 
-    List<List<bool>> ConcatFields()
+    List<List<CellState>> ConcatFields()
     {
-        List<List<bool>> field = new();
+        List<List<CellState>> field = new();
 
         for (int i = 0; i < firstPlayerField.Count; i++)
         {
-            field.Add(new List<bool>());
+            field.Add(new List<CellState>());
             field[i].AddRange(firstPlayerField[i]);
             field[i].AddRange(secondPlayerField[i]);
         }
@@ -62,7 +63,7 @@ public class CreateMultiplayer : MonoBehaviour
 
     public void StartGame()
     {
-        List<List<bool>> field = ConcatFields();
+        List<List<CellState>> field = ConcatFields();
         GetComponent<LifeVisual>().RecreateGame(field.Count, field[0].Count, field);
     }
 }

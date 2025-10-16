@@ -3,6 +3,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.U2D;
+using static Life;
 
 public class LifeVisual : MonoBehaviour
 {
@@ -19,13 +20,14 @@ public class LifeVisual : MonoBehaviour
     Life life;
     List<List<GameObject>> all;
 
-    Color DeadCellColor = Color.black;
-    Color LiveCellColor = Color.white;
+    Color DeadCellColor = Color.white;
+    Color LiveCellColor = Color.black;
     void Start()
     {
         life = new Life(h + 1, w + 1);
 
         CreateCells();
+        updateSprites();
 
         if (!interactive)
         {
@@ -77,25 +79,25 @@ public class LifeVisual : MonoBehaviour
     }
 
 
-    public void RecreateGame(int new_h, int new_w, List<List<bool>> field)
+    public void RecreateGame(int new_h, int new_w, List<List<CellState>> field)
     {
         DeleteField();
 
         h = new_h;
         w = new_w;
-        life = new Life(h + 1, w + 1, field);
+        life = new Life(h, w, field);
         CreateCells();
         updateSprites();
+
+        game = true;
     }
 
-    public List<List<bool>> getField()
+    public List<List<CellState>> getField()
     {
         var field = life.getField();
-        List<List<bool>> deepCopy = new();
+        List<List<CellState>> deepCopy = new();
         for (int i = 0; i < field.Count; i++)
-        {
-            deepCopy.Add(new List<bool>(field[i]));
-        }
+            deepCopy.Add(new List<CellState>(field[i]));
         return deepCopy;
     }
 
@@ -134,13 +136,13 @@ public class LifeVisual : MonoBehaviour
 
     private void updateSprites()
     {
-        List<List<bool>> field = life.getField();
+        List<List<CellState>> field = life.getField();
         for (int i = 0; i < field.Count; i++)
         {
             for (int j = 0; j < field[i].Count; j++)
             {
                 Color new_color = LiveCellColor;
-                if (field[i][j])
+                if (field[i][j] == CellState.Die)
                     new_color = DeadCellColor;
                 all[i][j].GetComponent<SpriteRenderer>().color = new_color;
             }
@@ -164,10 +166,14 @@ public class LifeVisual : MonoBehaviour
     }
     public void ChangeCell(int i, int j)
     {
-        life.changeCell(i, j);
-        if (life.getCell(i, j))
+        life.inverseCell(i, j);
+        if (life.getCell(i, j) == CellState.Die)
+        {
             all[i][j].GetComponent<SpriteRenderer>().color = DeadCellColor;
+        }
         else
+        {
             all[i][j].GetComponent<SpriteRenderer>().color = LiveCellColor;
+        }
     }
 }

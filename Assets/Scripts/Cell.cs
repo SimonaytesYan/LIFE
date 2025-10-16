@@ -18,6 +18,8 @@ public class Cell : MonoBehaviour
     private void OnMouseDown()
     {
         if (interactive)
+        {
             main.ChangeCell(i, j);
+        }
     }
 }
