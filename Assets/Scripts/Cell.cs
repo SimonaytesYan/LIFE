@@ -11,7 +11,6 @@ public class Cell : MonoBehaviour
     {
         if (interactive)
         {
-            Debug.Log("Find camera");
             main = GameObject.Find("Main Camera").GetComponent<LifeVisual>();
         }
     }

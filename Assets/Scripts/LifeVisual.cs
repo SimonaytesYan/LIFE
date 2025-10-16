@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.U2D;
 
 public class LifeVisual : MonoBehaviour
 {
@@ -15,7 +17,7 @@ public class LifeVisual : MonoBehaviour
     int frameNum = 0;
 
     Life life;
-    List<List<GameObject>> all = new List<List<GameObject>>();
+    List<List<GameObject>> all;
 
     Color DeadCellColor = Color.black;
     Color LiveCellColor = Color.white;
@@ -23,6 +25,19 @@ public class LifeVisual : MonoBehaviour
     {
         life = new Life(h + 1, w + 1);
 
+        CreateCells();
+
+        if (!interactive)
+        {
+            CreateRandomField();
+            game = true;
+            speed = 2;
+        }
+    }
+
+    void CreateCells()
+    {
+        all = new();
         GameObject sprite = Resources.Load("Cell") as GameObject;
         sprite.GetComponent<Cell>().interactive = interactive;
 
@@ -32,19 +47,56 @@ public class LifeVisual : MonoBehaviour
             for (int j = -w / 2; j <= w / 2; j++)
             {
                 GameObject Sprite = Instantiate(sprite);
-                Sprite.transform.position = new Vector2(i, j);
+                Sprite.transform.position = new Vector2(j, i);
                 Sprite.GetComponent<Cell>().i = i + h / 2;
                 Sprite.GetComponent<Cell>().j = j + w / 2;
                 all[i + h / 2].Add(Sprite);
             }
         }
+    }
 
-        if (!interactive)
+    void DeleteField()
+    {
+        game = false;
+        for (int i = 0; i <= h; i++)
         {
-            CreateRandomField();
-            game = true;
-            speed = 2;
+            for (int j = 0; j <= w; j++)
+            {
+                all[i][j].SetActive(false);
+                all[i][j] = null;
+            }
+            all[i] = null;
         }
+        all = null;
+    }
+
+    public void ClearField()
+    {
+        life = new Life(h + 1, w + 1);
+        updateSprites();
+    }
+
+
+    public void RecreateGame(int new_h, int new_w, List<List<bool>> field)
+    {
+        DeleteField();
+
+        h = new_h;
+        w = new_w;
+        life = new Life(h + 1, w + 1, field);
+        CreateCells();
+        updateSprites();
+    }
+
+    public List<List<bool>> getField()
+    {
+        var field = life.getField();
+        List<List<bool>> deepCopy = new();
+        for (int i = 0; i < field.Count; i++)
+        {
+            deepCopy.Add(new List<bool>(field[i]));
+        }
+        return deepCopy;
     }
 
     void Update()

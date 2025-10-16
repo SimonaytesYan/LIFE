@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
-using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 public class Life
@@ -31,6 +28,13 @@ public class Life
                 field[i].Add(false);
             }
         }
+    }
+
+    public Life(int height, int width, List<List<bool>> field)
+    {
+        h = height;
+        w = width;
+        this.field = field;
     }
 
     public List<List<bool>> getField()
@@ -75,7 +79,6 @@ public class Life
     {
         return field[i][j];
     }
-
     private List<List<bool>> copyList(List<List<bool>> list)
     {
         List<List<bool>> copy_list = new List<List<bool>>();
