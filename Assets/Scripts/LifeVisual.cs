@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.U2D;
+using static CreateMultiplayer;
 using static Life;
 
 public class LifeVisual : MonoBehaviour
@@ -10,21 +13,40 @@ public class LifeVisual : MonoBehaviour
     public int h = 60;
     public int w = 30;
     public bool interactive = true;
+    public bool multiplayer = false;
 
     const uint maxspeed = 25;
 
     bool game = false;
     int speed = 1;
     int frameNum = 0;
+    int stepCount = 0;
 
     Life life;
     List<List<GameObject>> all;
 
-    Color DeadCellColor = Color.white;
-    Color LiveCellColor = Color.black;
+    Action<GameResult> endGameAction;
+
+    Color ColorForCellState(CellState cellState)
+    {
+        switch (cellState)
+        {
+            case CellState.Die:
+                return Color.white;
+            case CellState.Live:
+                return Color.black;
+            case CellState.FirstPlayer:
+                return Color.green;
+            case CellState.SecondPlayer:
+                return Color.blue;
+        }
+
+        return Color.white;
+    }
+
     void Start()
     {
-        life = new Life(h + 1, w + 1);
+        life = new Life(h + 1, w + 1, multiplayer);
 
         CreateCells();
         updateSprites();
@@ -57,12 +79,12 @@ public class LifeVisual : MonoBehaviour
         }
     }
 
-    void DeleteField()
+    public void DeleteField()
     {
         game = false;
-        for (int i = 0; i <= h; i++)
+        for (int i = 0; i < all.Count; i++)
         {
-            for (int j = 0; j <= w; j++)
+            for (int j = 0; j < all[i].Count; j++)
             {
                 all[i][j].SetActive(false);
                 all[i][j] = null;
@@ -74,22 +96,30 @@ public class LifeVisual : MonoBehaviour
 
     public void ClearField()
     {
-        life = new Life(h + 1, w + 1);
+        life = new Life(h + 1, w + 1, multiplayer);
         updateSprites();
     }
 
 
-    public void RecreateGame(int new_h, int new_w, List<List<CellState>> field)
+    public void RecreateGame(int new_h, int new_w, bool multiplayer, bool interactive,
+                             List<List<CellState>> field, int stepCount, int gameSpeed,
+                             Action<GameResult> endGameAction)
     {
+        this.multiplayer = multiplayer;
+        this.interactive = interactive;
+
         DeleteField();
 
         h = new_h;
         w = new_w;
-        life = new Life(h, w, field);
+        life = new Life(h, w, multiplayer, field);
         CreateCells();
         updateSprites();
 
         game = true;
+        speed = gameSpeed;
+        this.stepCount = stepCount;
+        this.endGameAction = endGameAction;
     }
 
     public List<List<CellState>> getField()
@@ -111,9 +141,47 @@ public class LifeVisual : MonoBehaviour
                 updateSprites();
 
                 frameNum = 0;
+
+                if (multiplayer && stepCount <= life.getStep())
+                {
+                    CountWinner();
+                }
             }
             frameNum++;
         }
+    }
+
+    void CountWinner()
+    {
+        int firstPlayerCounter = 0;
+        int secondPlayerCounter = 0;
+
+        List<List<CellState>> field = life.getField();
+        for (int i = 0; i < field.Count; i++)
+        {
+            for (int j = 0; j < field[i].Count; j++)
+            {
+                if (field[i][j] == CellState.FirstPlayer)
+                    firstPlayerCounter++;
+                if (field[i][j] == CellState.SecondPlayer)
+                    secondPlayerCounter++;
+            }
+        }
+
+        GameResult result = GameResult.Draw;
+        if (firstPlayerCounter < secondPlayerCounter)
+        {
+            result = GameResult.SecondWin;
+            Debug.Log("Second player win!");
+        }
+        else if (firstPlayerCounter > secondPlayerCounter)
+        {
+            result = GameResult.FirstWin;
+            Debug.Log("First player win!");
+        }
+
+        StopLife();
+        endGameAction(result);
     }
 
     public void StartLife()
@@ -133,6 +201,11 @@ public class LifeVisual : MonoBehaviour
             speed++;
         }
     }
+    public void SpeedDown()
+    {
+        if (speed > 1)
+            speed--;
+    }
 
     private void updateSprites()
     {
@@ -141,10 +214,7 @@ public class LifeVisual : MonoBehaviour
         {
             for (int j = 0; j < field[i].Count; j++)
             {
-                Color new_color = LiveCellColor;
-                if (field[i][j] == CellState.Die)
-                    new_color = DeadCellColor;
-                all[i][j].GetComponent<SpriteRenderer>().color = new_color;
+                all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(field[i][j]);
             }
         }
     }
@@ -156,24 +226,9 @@ public class LifeVisual : MonoBehaviour
             updateSprites();
         }
     }
-
-    public void SpeedDown()
-    {
-        if (speed > 1)
-        {
-            speed--;
-        }
-    }
     public void ChangeCell(int i, int j)
     {
         life.inverseCell(i, j);
-        if (life.getCell(i, j) == CellState.Die)
-        {
-            all[i][j].GetComponent<SpriteRenderer>().color = DeadCellColor;
-        }
-        else
-        {
-            all[i][j].GetComponent<SpriteRenderer>().color = LiveCellColor;
-        }
+        all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(i, j));
     }
 }

@@ -15,10 +15,11 @@ public class Life
         SecondPlayer
     };
 
-    public Life(int height, int width)
+    public Life(int height, int width, bool multiplayer)
     {
         h = height;
         w = width;
+        this.multiplayer = multiplayer;
         steps = 0;
         field = new List<List<CellState>>(h);
 
@@ -32,10 +33,12 @@ public class Life
         }
     }
 
-    public Life(int height, int width, List<List<CellState>> field)
+    public Life(int height, int width, bool multiplayer, List<List<CellState>> field)
     {
         h = height;
         w = width;
+        this.multiplayer = multiplayer;
+        // TODO deep copy ?
         this.field = field;
     }
 
@@ -59,7 +62,7 @@ public class Life
         {
             for (int j = 0; j < w; j++)
             {
-                CellState life = IsItLife(old_field, i, j);
+                CellState life = CalcCellNextState(old_field, i, j);
                 field[i][j] = life;
             }
         }
@@ -95,7 +98,14 @@ public class Life
         return field[i][j];
     }
 
-    private CellState IsItLife(List<List<CellState>> old_field, int i, int j)
+    private CellState CalcCellNextState(List<List<CellState>> old_field, int i, int j)
+    {
+        if (multiplayer)
+            return CalcCellNextStateMuliplayer(old_field, i, j);
+        else
+            return CalcCellNextStateLocal(old_field, i, j);
+    }
+    private CellState CalcCellNextStateLocal(List<List<CellState>> old_field, int i, int j)
     {
         int CntLifeNeigh = 0;
         for (int ind = 0; ind < neighbors.Count(); ind++)
@@ -126,10 +136,62 @@ public class Life
         }
     }
 
+    private CellState CalcCellNextStateMuliplayer(List<List<CellState>> old_field, int i, int j)
+    {
+        int CntFirstPlayerNeigh = 0;
+        int CntSecondPlayerNeigh = 0;
+        for (int ind = 0; ind < neighbors.Count(); ind++)
+        {
+            int neighbor_i = i + neighbors[ind].x;
+            int neighbor_j = j + neighbors[ind].y;
+            if (0 <= neighbor_i && neighbor_i < old_field.Count)
+            {
+                if (0 <= neighbor_j && neighbor_j < old_field[neighbor_i].Count)
+                {
+                    if (old_field[neighbor_i][neighbor_j] == CellState.FirstPlayer)
+                        CntFirstPlayerNeigh++;
+                    else if (old_field[neighbor_i][neighbor_j] == CellState.SecondPlayer)
+                        CntSecondPlayerNeigh++;
+                }
+            }
+        }
+
+        int CntLifeNeigh = CntFirstPlayerNeigh + CntSecondPlayerNeigh;
+        if (old_field[i][j] == CellState.Die)
+        {
+            if (CntLifeNeigh == 3)
+            {
+                if (CntFirstPlayerNeigh < CntSecondPlayerNeigh)
+                    return CellState.SecondPlayer;
+                else
+                    return CellState.FirstPlayer;
+            }
+            return CellState.Die;
+        }
+        else
+        {
+            if (CntLifeNeigh == 2 || CntLifeNeigh == 3)
+            {
+                if (old_field[i][j] == CellState.FirstPlayer)
+                    CntFirstPlayerNeigh += 1;
+                else
+                    CntSecondPlayerNeigh += 1;
+
+                if (CntFirstPlayerNeigh < CntSecondPlayerNeigh)
+                    return CellState.SecondPlayer;
+                else if (CntFirstPlayerNeigh > CntSecondPlayerNeigh)
+                    return CellState.FirstPlayer;
+                else 
+                    return old_field[i][j];
+            }
+            return CellState.Die;
+        }
+    }
 
     int h;
     int w;
     int steps;
+    bool multiplayer;
     List<List<CellState>> field;
 
     static readonly Vector2Int[] neighbors = new Vector2Int[]{new Vector2Int(-1, 1), new Vector2Int(-1, 0), new Vector2Int(-1, -1),
