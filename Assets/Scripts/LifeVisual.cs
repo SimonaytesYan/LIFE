@@ -21,7 +21,8 @@ public class LifeVisual : MonoBehaviour
     {
         life = new Life(h + 1, w + 1);
 
-        GameObject sprite = GameObject.Find("1");
+        GameObject sprite = Resources.Load("Cell") as GameObject;
+
         for (int i = -h / 2; i <= h / 2; i++)
         {
             all.Add(new List<GameObject>());
