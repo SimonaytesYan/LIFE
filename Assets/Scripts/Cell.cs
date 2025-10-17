@@ -42,6 +42,7 @@ public class Cell : MonoBehaviour
         if (interactive)
         {
             main.ChangeCell(i, j);
+            main.BuildPrefab(i, j);
         }
     }
 

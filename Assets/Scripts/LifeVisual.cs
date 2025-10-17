@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Unity.VisualScripting;
@@ -7,6 +8,68 @@ using UnityEngine;
 using UnityEngine.U2D;
 using static CreateMultiplayer;
 using static Life;
+
+class LifePrefab
+{
+    Vector2Int size;
+    List<List<bool>> cells;
+
+    LifePrefab(List<List<bool>> cells)
+    {
+        size.y = cells.Count;
+        for (int i = 0; i < size.y; i++)
+        {
+            size.x = Math.Max(size.x, cells[i].Count);
+        }
+        this.cells = cells;
+
+    }
+    public List<List<bool>> GetCells()
+    {
+        return cells;
+    }
+
+    Vector2 Size()
+    {
+
+        return size;
+    }
+
+    public static LifePrefab CreateGlider()
+    {
+        List<List<bool>> result = new List<List<bool>>
+        {
+            new List<bool> { false, true,  false},
+            new List<bool> { false, false, true },
+            new List<bool> { true,  true,  true },
+        };
+
+        return new LifePrefab(result);
+    }
+    public static LifePrefab CreateSpaceShip()
+    {
+        List<List<bool>> result = new List<List<bool>>
+        {
+            new List<bool> { true,  false, false, true,  false},
+            new List<bool> { false, false, false, false, true},
+            new List<bool> { true,  false, false, false, true},
+            new List<bool> { false, true,  true , true,  true},
+        };
+
+        return new LifePrefab(result);
+    }
+    public static LifePrefab CreateMethuselah()
+    {
+        List<List<bool>> result = new List<List<bool>>
+        {
+            new List<bool> { false, true,  false},
+            new List<bool> { false, true,  true },
+            new List<bool> { true,  true,  false},
+        };
+
+        return new LifePrefab(result);
+    }
+};
 
 public class LifeVisual : MonoBehaviour
 {
@@ -26,26 +89,16 @@ public class LifeVisual : MonoBehaviour
     List<List<GameObject>> all;
 
     Action<GameResult> endGameAction;
-
-    Color ColorForCellState(CellState cellState)
-    {
-        switch (cellState)
-        {
-            case CellState.Die:
-                return Color.white;
-            case CellState.Live:
-                return Color.black;
-            case CellState.FirstPlayer:
-                return Color.green;
-            case CellState.SecondPlayer:
-                return Color.blue;
-        }
-
-        return Color.white;
-    }
+    Dictionary<string, LifePrefab> prefabs;
+    LifePrefab currentPrefab;
 
     void Start()
     {
+        prefabs = new();
+        prefabs.Add("glider", LifePrefab.CreateGlider());
+        prefabs.Add("methuselah", LifePrefab.CreateMethuselah());
+        prefabs.Add("spaceship", LifePrefab.CreateSpaceShip());
+
         life = new Life(h, w, multiplayer);
 
         CreateCells();
@@ -56,26 +109,6 @@ public class LifeVisual : MonoBehaviour
             CreateRandomField();
             game = true;
             speed = 2;
-        }
-    }
-
-    void CreateCells()
-    {
-        all = new();
-        GameObject sprite = Resources.Load("Cell") as GameObject;
-        sprite.GetComponent<Cell>().interactive = interactive;
-
-        for (int i = 0; i < h; i++)
-        {
-            all.Add(new List<GameObject>());
-            for (int j = 0; j < w; j++)
-            {
-                GameObject Sprite = Instantiate(sprite);
-                Sprite.transform.position = new Vector2(j - w/2, i - h/2);
-                Sprite.GetComponent<Cell>().i = i;
-                Sprite.GetComponent<Cell>().j = j;
-                all[i].Add(Sprite);
-            }
         }
     }
 
@@ -152,39 +185,6 @@ public class LifeVisual : MonoBehaviour
         }
     }
 
-    void CountWinner()
-    {
-        int firstPlayerCounter = 0;
-        int secondPlayerCounter = 0;
-
-        List<List<CellState>> field = life.getField();
-        for (int i = 0; i < field.Count; i++)
-        {
-            for (int j = 0; j < field[i].Count; j++)
-            {
-                if (field[i][j] == CellState.FirstPlayer)
-                    firstPlayerCounter++;
-                if (field[i][j] == CellState.SecondPlayer)
-                    secondPlayerCounter++;
-            }
-        }
-
-        GameResult result = GameResult.Draw;
-        if (firstPlayerCounter < secondPlayerCounter)
-        {
-            result = GameResult.SecondWin;
-            Debug.Log("Second player win!");
-        }
-        else if (firstPlayerCounter > secondPlayerCounter)
-        {
-            result = GameResult.FirstWin;
-            Debug.Log("First player win!");
-        }
-
-        StopLife();
-        endGameAction(result);
-    }
-
     public void StartLife()
     {
         game = true;
@@ -208,6 +208,59 @@ public class LifeVisual : MonoBehaviour
             speed--;
     }
 
+    public void CreateRandomField()
+    {
+        life.setRandomField();
+        updateSprites();
+    }
+    public void ChangeCell(int i, int j)
+    {
+        life.inverseCell(i, j);
+        all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(i, j));
+    }
+
+    public void BuildPrefab(int start_i, int start_j)
+    {
+        if (currentPrefab != null)
+        {
+            List<List<bool>> prefabCells = currentPrefab.GetCells();
+            for (int i = 0; i < prefabCells.Count; i++)
+            {
+                for (int j = 0; j < prefabCells[i].Count; j++)
+                {
+                    if (prefabCells[i][j])
+                        life.setCell(start_i + i, start_j + j, CellState.Live);
+                    else
+                        life.setCell(start_i + i, start_j + j, CellState.Die);
+                }
+            }
+            updateSprites();
+
+            currentPrefab = null;
+        }
+    }
+
+    public void StartBuildingPrefab(string name)
+    {
+        currentPrefab = prefabs[name];
+    }
+
+    private Color ColorForCellState(CellState cellState)
+    {
+        switch (cellState)
+        {
+            case CellState.Die:
+                return Color.white;
+            case CellState.Live:
+                return Color.black;
+            case CellState.FirstPlayer:
+                return Color.green;
+            case CellState.SecondPlayer:
+                return Color.blue;
+        }
+
+        return Color.white;
+    }
     private void updateSprites()
     {
         List<List<CellState>> field = life.getField();
@@ -219,14 +272,54 @@ public class LifeVisual : MonoBehaviour
             }
         }
     }
-    public void CreateRandomField()
+    private void CountWinner()
     {
-        life.setRandomField();
-        updateSprites();
+        int firstPlayerCounter = 0;
+        int secondPlayerCounter = 0;
+
+        List<List<CellState>> field = life.getField();
+        for (int i = 0; i < field.Count; i++)
+        {
+            for (int j = 0; j < field[i].Count; j++)
+            {
+                if (field[i][j] == CellState.FirstPlayer)
+                    firstPlayerCounter++;
+                if (field[i][j] == CellState.SecondPlayer)
+                    secondPlayerCounter++;
+            }
+        }
+
+        GameResult result = GameResult.Draw;
+        if (firstPlayerCounter < secondPlayerCounter)
+        {
+            result = GameResult.SecondWin;
+        }
+        else if (firstPlayerCounter > secondPlayerCounter)
+        {
+            result = GameResult.FirstWin;
+        }
+
+        StopLife();
+        endGameAction(result);
     }
-    public void ChangeCell(int i, int j)
+
+    void CreateCells()
     {
-        life.inverseCell(i, j);
-        all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(i, j));
+        all = new();
+        GameObject sprite = Resources.Load("Cell") as GameObject;
+        sprite.GetComponent<Cell>().interactive = interactive;
+
+        for (int i = 0; i < h; i++)
+        {
+            all.Add(new List<GameObject>());
+            for (int j = 0; j < w; j++)
+            {
+                GameObject Sprite = Instantiate(sprite);
+                Sprite.transform.position = new Vector2(j - w / 2, i - h / 2);
+                Sprite.GetComponent<Cell>().i = i;
+                Sprite.GetComponent<Cell>().j = j;
+                all[i].Add(Sprite);
+            }
+        }
     }
 }

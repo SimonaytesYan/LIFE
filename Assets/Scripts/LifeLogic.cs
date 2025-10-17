@@ -97,6 +97,10 @@ public class Life
     {
         return field[i][j];
     }
+    public void setCell(int i, int j, CellState new_state)
+    {
+        field[i][j] = new_state;
+    }
 
     private CellState CalcCellNextState(List<List<CellState>> old_field, int i, int j)
     {
