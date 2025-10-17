@@ -87,6 +87,7 @@ public class LifeVisual : MonoBehaviour
             for (int j = 0; j < all[i].Count; j++)
             {
                 all[i][j].SetActive(false);
+                Destroy(all[i][j]);
                 all[i][j] = null;
             }
             all[i] = null;
