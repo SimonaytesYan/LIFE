@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
-using UnityEngine.U2D;
+using UnityEngine.UIElements;
 using static CreateMultiplayer;
 using static Life;
 
@@ -93,6 +90,9 @@ public class LifeVisual : MonoBehaviour
     LifePrefab currentPrefab;
 
     Color prefabColor = Color.gray;
+    bool verticalReflection = false;
+    const string RotateKey = "R";
+    Vector2Int lastPrefabPos;
 
 
     void Start()
@@ -236,10 +236,20 @@ public class LifeVisual : MonoBehaviour
             {
                 for (int j = 0; j < prefabCells[i].Count; j++)
                 {
+                    var cell_i = start_i + i;
+                    var cell_j = start_j + j;
+                    if (verticalReflection)
+                    {
+                        cell_i = start_i - i;
+                        cell_j = start_j - j;
+                    }
+                    if (cell_i >= h || cell_j >= w || cell_i < 0 || cell_j < 0)
+                        continue;
+
                     if (prefabCells[i][j])
-                        life.setCell(start_i + i, start_j + j, CellState.Live);
+                        life.setCell(cell_i, cell_j, CellState.Live);
                     else
-                        life.setCell(start_i + i, start_j + j, CellState.Die);
+                        life.setCell(cell_i, cell_j, CellState.Die);
                 }
             }
             updateSprites();
@@ -339,14 +349,48 @@ public class LifeVisual : MonoBehaviour
         }
     }
 
-    public void ColorCellToPrefab(int i, int j)
+    public void ColorCellToPrefab(int start_i, int start_j, bool clearColor)
     {
-        if (life.getCell(i, j) == CellState.Die)
-            all[i][j].GetComponent<SpriteRenderer>().color = prefabColor;
-    }
+        if (currentPrefab != null)
+        {
+            lastPrefabPos = new Vector2Int(start_i, start_j);
 
-    public void ClearCellColor(int i, int j)
+            var Cells = currentPrefab.GetCells();
+            for (int prefab_x = 0; prefab_x < currentPrefab.Size().x; prefab_x++)
+            {
+                for (int prefab_y = 0; prefab_y < currentPrefab.Size().y; prefab_y++)
+                {
+                    var cell_i = start_i + prefab_y;
+                    var cell_j = start_j + prefab_x;
+                    if (verticalReflection)
+                    {
+                        cell_i = start_i - prefab_y;
+                        cell_j = start_j - prefab_x;
+                    }
+
+
+                    if (cell_i >= h || cell_j >= w || cell_i < 0 || cell_j < 0)
+                        continue;
+
+                    var CellState = life.getCell(cell_i, cell_j);
+                    if (clearColor)
+                        all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = ColorForCellState(CellState);
+                    else if (Cells[prefab_y][prefab_x] && CellState == CellState.Die)
+                        all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = prefabColor;
+                }
+            }
+        }
+    }
+    void OnGUI()
     {
-        all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(i, j));
+        if (Event.current.Equals(Event.KeyboardEvent(RotateKey)))
+        {
+            if (currentPrefab != null)
+            {
+                ColorCellToPrefab(lastPrefabPos.x, lastPrefabPos.y, true);
+                verticalReflection = !verticalReflection;
+                ColorCellToPrefab(lastPrefabPos.x, lastPrefabPos.y, false);
+            }
+        }
     }
 }

@@ -68,17 +68,7 @@ public class Cell : MonoBehaviour
     {
         if (interactive)
         {
-            LifePrefab currentPrefab = main.GetCurrentPrefab();
-            if (currentPrefab != null)
-            {
-                var Cells = currentPrefab.GetCells();
-                for (int x = 0; x < currentPrefab.Size().x; x++)
-                {
-                    for (int y = 0; y < currentPrefab.Size().y; y++)
-                        if (Cells[y][x])
-                            main.ColorCellToPrefab(i + y, j + x);
-                }
-            }
+            main.ColorCellToPrefab(i, j, false);
         }
     }
 
@@ -87,17 +77,7 @@ public class Cell : MonoBehaviour
     {
         if (interactive)
         {
-            LifePrefab currentPrefab = main.GetCurrentPrefab();
-            if (currentPrefab != null)
-            {
-                var Cells = currentPrefab.GetCells();
-                for (int x = 0; x < currentPrefab.Size().x; x++)
-                {
-                    for (int y = 0; y < currentPrefab.Size().y; y++)
-                        if (Cells[y][x])
-                            main.ClearCellColor(i + y, j + x);
-                }
-            }
+            main.ColorCellToPrefab(i, j, true);
         }
     }
 }
