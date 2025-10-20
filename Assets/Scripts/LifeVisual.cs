@@ -29,7 +29,7 @@ class LifePrefab
         return cells;
     }
 
-    Vector2 Size()
+    public Vector2 Size()
     {
 
         return size;
@@ -219,10 +219,16 @@ public class LifeVisual : MonoBehaviour
         all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(i, j));
     }
 
-    public void BuildPrefab(int start_i, int start_j)
+    public bool BuildPrefab(int start_i, int start_j)
     {
         if (currentPrefab != null)
         {
+            if (currentPrefab.Size().x + start_i >= h || currentPrefab.Size().y + start_j >= w)
+            {
+                currentPrefab = null;
+                return false;
+            }
+
             List<List<bool>> prefabCells = currentPrefab.GetCells();
             for (int i = 0; i < prefabCells.Count; i++)
             {
@@ -237,7 +243,10 @@ public class LifeVisual : MonoBehaviour
             updateSprites();
 
             currentPrefab = null;
+            return true;
         }
+
+        return false;
     }
 
     public void StartBuildingPrefab(string name)

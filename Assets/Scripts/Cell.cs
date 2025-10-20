@@ -24,16 +24,21 @@ public class Cell : MonoBehaviour
 
     void Update()
     {
-        if (interactive && drag)
+        if (interactive && drag && cameraMove != null)
         {
-            Vector3 mouse = Input.mousePosition;
-            cameraMove.Move(mousePos - mouse);
-            mousePos = mouse;
+            Move();
+        }
+    }
 
-            if (!Input.GetMouseButton(1))
-            {
-                drag = false;
-            }
+    void Move()
+    {
+        Vector3 mouse = Input.mousePosition;
+        cameraMove.Move(mousePos - mouse);
+        mousePos = mouse;
+
+        if (!Input.GetMouseButton(1))
+        {
+            drag = false;
         }
     }
 
@@ -41,8 +46,9 @@ public class Cell : MonoBehaviour
     {
         if (interactive)
         {
-            main.ChangeCell(i, j);
-            main.BuildPrefab(i, j);
+            bool prefabBuilded = main.BuildPrefab(i, j);
+            if (!prefabBuilded)
+                main.ChangeCell(i, j);
         }
     }
 
