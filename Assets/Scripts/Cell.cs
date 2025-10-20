@@ -63,4 +63,42 @@ public class Cell : MonoBehaviour
             }
         }
     }
+
+    private void OnMouseEnter()
+    {
+        if (interactive)
+        {
+            LifePrefab currentPrefab = main.GetCurrentPrefab();
+            if (currentPrefab != null)
+            {
+                var Cells = currentPrefab.GetCells();
+                for (int x = 0; x < currentPrefab.Size().x; x++)
+                {
+                    for (int y = 0; y < currentPrefab.Size().y; y++)
+                        if (Cells[y][x])
+                            main.ColorCellToPrefab(i + y, j + x);
+                }
+            }
+        }
+    }
+
+
+    private void OnMouseExit()
+    {
+        if (interactive)
+        {
+            LifePrefab currentPrefab = main.GetCurrentPrefab();
+            if (currentPrefab != null)
+            {
+                var Cells = currentPrefab.GetCells();
+                for (int x = 0; x < currentPrefab.Size().x; x++)
+                {
+                    for (int y = 0; y < currentPrefab.Size().y; y++)
+                        if (Cells[y][x])
+                            main.ClearCellColor(i + y, j + x);
+                }
+            }
+        }
+    }
 }
+

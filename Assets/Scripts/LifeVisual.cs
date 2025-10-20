@@ -9,7 +9,7 @@ using UnityEngine.U2D;
 using static CreateMultiplayer;
 using static Life;
 
-class LifePrefab
+public class LifePrefab
 {
     Vector2Int size;
     List<List<bool>> cells;
@@ -92,6 +92,9 @@ public class LifeVisual : MonoBehaviour
     Dictionary<string, LifePrefab> prefabs;
     LifePrefab currentPrefab;
 
+    Color prefabColor = Color.gray;
+
+
     void Start()
     {
         prefabs = new();
@@ -133,7 +136,6 @@ public class LifeVisual : MonoBehaviour
         life = new Life(h, w, multiplayer);
         updateSprites();
     }
-
 
     public void RecreateGame(int new_h, int new_w, bool multiplayer, bool interactive,
                              List<List<CellState>> field, int stepCount, int gameSpeed,
@@ -249,6 +251,11 @@ public class LifeVisual : MonoBehaviour
         return false;
     }
 
+    public LifePrefab GetCurrentPrefab()
+    {
+        return currentPrefab;
+    }
+
     public void StartBuildingPrefab(string name)
     {
         currentPrefab = prefabs[name];
@@ -330,5 +337,16 @@ public class LifeVisual : MonoBehaviour
                 all[i].Add(Sprite);
             }
         }
+    }
+
+    public void ColorCellToPrefab(int i, int j)
+    {
+        if (life.getCell(i, j) == CellState.Die)
+            all[i][j].GetComponent<SpriteRenderer>().color = prefabColor;
+    }
+
+    public void ClearCellColor(int i, int j)
+    {
+        all[i][j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(i, j));
     }
 }
