@@ -133,7 +133,7 @@ public class CreateMultiplayer : MonoBehaviour
         text.text = gameResultLabelText;
 
         GetComponent<LifeVisual>().StopLife();
-        GetComponent<LifeVisual>().DeleteField();
+        //GetComponent<LifeVisual>().DeleteField();
         GetComponent<LifeVisual>().enabled = false;
 
         GameUI.SetActive(false);
