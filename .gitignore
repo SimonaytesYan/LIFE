@@ -10,3 +10,5 @@ UserSettings
 .vs*
 LIFE.sln
 Assembly*
+WebBuild
+Build*
