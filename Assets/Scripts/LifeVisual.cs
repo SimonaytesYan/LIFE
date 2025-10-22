@@ -94,9 +94,9 @@ public class LifeVisual : MonoBehaviour
     const string RotateKey = "R";
     Vector2Int lastPrefabPos;
 
-
     void Start()
     {
+        SetInvalidLastPrefabPos();
         prefabs = new();
         prefabs.Add("glider", LifePrefab.CreateGlider());
         prefabs.Add("methuselah", LifePrefab.CreateMethuselah());
@@ -171,7 +171,7 @@ public class LifeVisual : MonoBehaviour
     {
         if (game)
         {
-            if (frameNum >= 150 / speed)
+            if (frameNum >= 100 / speed)
             {
                 life.Step();
                 updateSprites();
@@ -225,36 +225,10 @@ public class LifeVisual : MonoBehaviour
     {
         if (currentPrefab != null)
         {
-            if (currentPrefab.Size().x + start_i >= h || currentPrefab.Size().y + start_j >= w)
-            {
-                currentPrefab = null;
-                return false;
-            }
-
-            List<List<bool>> prefabCells = currentPrefab.GetCells();
-            for (int i = 0; i < prefabCells.Count; i++)
-            {
-                for (int j = 0; j < prefabCells[i].Count; j++)
-                {
-                    var cell_i = start_i + i;
-                    var cell_j = start_j + j;
-                    if (verticalReflection)
-                    {
-                        cell_i = start_i - i;
-                        cell_j = start_j - j;
-                    }
-                    if (cell_i >= h || cell_j >= w || cell_i < 0 || cell_j < 0)
-                        continue;
-
-                    if (prefabCells[i][j])
-                        life.setCell(cell_i, cell_j, CellState.Live);
-                    else
-                        life.setCell(cell_i, cell_j, CellState.Die);
-                }
-            }
-            updateSprites();
+            ColorCellToPrefab(start_i, start_j, ColorCellToPrefabWorkMod.Build);
 
             currentPrefab = null;
+            SetInvalidLastPrefabPos();
             return true;
         }
 
@@ -349,12 +323,31 @@ public class LifeVisual : MonoBehaviour
         }
     }
 
-    public void ColorCellToPrefab(int start_i, int start_j, bool clearColor)
+    public void SetLastPrefabPos(int i, int j)
+    {
+        lastPrefabPos = new Vector2Int(i, j);
+    }
+
+    public void SetInvalidLastPrefabPos()
+    {
+        lastPrefabPos = new Vector2Int(int.MinValue, int.MinValue);
+    }
+
+    bool isLastPrefabPosInvalid()
+    {
+        return lastPrefabPos.x == int.MinValue && lastPrefabPos.y == int.MinValue;
+    }
+
+    public enum ColorCellToPrefabWorkMod
+    {
+        Clear,
+        Preview,
+        Build
+    }
+    public void ColorCellToPrefab(int start_i, int start_j, ColorCellToPrefabWorkMod clearColor)
     {
         if (currentPrefab != null)
         {
-            lastPrefabPos = new Vector2Int(start_i, start_j);
-
             var Cells = currentPrefab.GetCells();
             for (int prefab_x = 0; prefab_x < currentPrefab.Size().x; prefab_x++)
             {
@@ -373,10 +366,26 @@ public class LifeVisual : MonoBehaviour
                         continue;
 
                     var CellState = life.getCell(cell_i, cell_j);
-                    if (clearColor)
-                        all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = ColorForCellState(CellState);
-                    else if (Cells[prefab_y][prefab_x] && CellState == CellState.Die)
-                        all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = prefabColor;
+                    switch (clearColor)
+                    {
+                        case ColorCellToPrefabWorkMod.Clear:
+                            all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = ColorForCellState(CellState);
+                            break;
+                        case ColorCellToPrefabWorkMod.Preview:
+                            if (Cells[prefab_y][prefab_x])
+                                all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = prefabColor;
+                            break;
+                        case ColorCellToPrefabWorkMod.Build:
+                            {
+                                if (Cells[prefab_y][prefab_x])
+                                    life.setCell(cell_i, cell_j, CellState.Live);
+                                else
+                                    life.setCell(cell_i, cell_j, CellState.Die);
+                                all[cell_i][cell_j].GetComponent<SpriteRenderer>().color = ColorForCellState(life.getCell(cell_i, cell_j));
+
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -387,9 +396,12 @@ public class LifeVisual : MonoBehaviour
         {
             if (currentPrefab != null)
             {
-                ColorCellToPrefab(lastPrefabPos.x, lastPrefabPos.y, true);
-                verticalReflection = !verticalReflection;
-                ColorCellToPrefab(lastPrefabPos.x, lastPrefabPos.y, false);
+                if (!isLastPrefabPosInvalid())
+                {
+                    ColorCellToPrefab(lastPrefabPos.x, lastPrefabPos.y, ColorCellToPrefabWorkMod.Clear);
+                    verticalReflection = !verticalReflection;
+                    ColorCellToPrefab(lastPrefabPos.x, lastPrefabPos.y, ColorCellToPrefabWorkMod.Preview);
+                }
             }
         }
     }

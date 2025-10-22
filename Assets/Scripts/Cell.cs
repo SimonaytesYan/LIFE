@@ -68,7 +68,8 @@ public class Cell : MonoBehaviour
     {
         if (interactive)
         {
-            main.ColorCellToPrefab(i, j, false);
+            main.ColorCellToPrefab(i, j, LifeVisual.ColorCellToPrefabWorkMod.Preview);
+            main.SetLastPrefabPos(i, j);
         }
     }
 
@@ -77,7 +78,8 @@ public class Cell : MonoBehaviour
     {
         if (interactive)
         {
-            main.ColorCellToPrefab(i, j, true);
+            main.ColorCellToPrefab(i, j, LifeVisual.ColorCellToPrefabWorkMod.Clear);
+            main.SetInvalidLastPrefabPos();
         }
     }
 }

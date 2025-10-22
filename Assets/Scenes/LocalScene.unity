@@ -312,14 +312,14 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'To rotate prefab - press R
+  m_text: 'To move field - right mouse button
 
-    To move field - right mouse button
+    To change cell state - left mouse
+    button
 
-    To
-    change cell state - left mouse button
+    To zoon in/out - mouse wheel
 
-    To zoon in/out - mouse wheel'
+    To rotate prefab - press R'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 88edbbbb049aca24bbd6e40ab7db79b3, type: 2}
   m_sharedMaterial: {fileID: -97143767980034223, guid: 88edbbbb049aca24bbd6e40ab7db79b3, type: 2}
