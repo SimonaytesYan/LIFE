@@ -1,4 +1,6 @@
 .vs
+Build*
+*Build*
 Build
 Build1
 Library
@@ -10,5 +12,3 @@ UserSettings
 .vs*
 LIFE.sln
 Assembly*
-WebBuild
-Build*
